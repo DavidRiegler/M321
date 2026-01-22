@@ -8,7 +8,11 @@ fastify.register(fastifyCors, {
   origin: true, // Allow all origins for development
 });
 
-const API_URL = 'https://edu.jakobmeier.ch/api/color';
+// API URLs for different modes
+const API_URLS = {
+  online: 'https://edu.jakobmeier.ch/api/color',
+  locally: 'http://localhost:5085/api/color',
+};
 
 interface ColorData {
   x: number;
@@ -30,10 +34,20 @@ interface ApiResponse {
   totalRequests: number;
 }
 
+interface ColorRequest {
+  Querystring: {
+    mode?: 'online' | 'locally';
+  };
+}
+
 // Fetch all color data for coordinates 0-15
-fastify.get<{ Reply: ApiResponse }>('/api/colors', async (request, reply) => {
+fastify.get<ColorRequest & { Reply: ApiResponse }>('/api/colors', async (request, reply) => {
   const startTime = performance.now();
   let requestCount = 0;
+
+  // Get mode from query parameter, default to 'online'
+  const mode = (request.query.mode as 'online' | 'locally') || 'online';
+  const API_URL = API_URLS[mode];
 
   try {
     // Create array of all fetch promises
