@@ -40,6 +40,39 @@ interface ColorRequest {
   };
 }
 
+interface Team {
+  id: number;
+  name: string;
+  color: {
+    Red: number;
+    Green: number;
+    Blue: number;
+  };
+}
+
+// Local cache for pixel modifications (only for locally mode)
+const localPixelCache = new Map<string, { teamId: number; Red: number; Green: number; Blue: number }>();
+
+// Team definitions with RGB values
+const TEAMS: Team[] = [
+  { id: 0, name: 'Team 0', color: { Red: 255, Green: 0, Blue: 0 } },
+  { id: 1, name: 'Team 1', color: { Red: 0, Green: 255, Blue: 0 } },
+  { id: 2, name: 'Team 2', color: { Red: 0, Green: 0, Blue: 255 } },
+  { id: 3, name: 'Team 3', color: { Red: 255, Green: 255, Blue: 0 } },
+  { id: 4, name: 'Team 4', color: { Red: 255, Green: 0, Blue: 255 } },
+  { id: 5, name: 'Team 5', color: { Red: 0, Green: 255, Blue: 255 } },
+  { id: 6, name: 'Team 6', color: { Red: 128, Green: 0, Blue: 0 } },
+  { id: 7, name: 'Team 7', color: { Red: 0, Green: 128, Blue: 0 } },
+  { id: 8, name: 'Team 8', color: { Red: 0, Green: 0, Blue: 128 } },
+  { id: 9, name: 'Team 9', color: { Red: 128, Green: 128, Blue: 0 } },
+  { id: 10, name: 'Team 10', color: { Red: 128, Green: 0, Blue: 128 } },
+  { id: 11, name: 'Team 11', color: { Red: 0, Green: 128, Blue: 128 } },
+  { id: 12, name: 'Team 12', color: { Red: 192, Green: 192, Blue: 192 } },
+  { id: 13, name: 'Team 13', color: { Red: 128, Green: 128, Blue: 128 } },
+  { id: 14, name: 'Team 14', color: { Red: 255, Green: 128, Blue: 0 } },
+  { id: 15, name: 'Team 15', color: { Red: 0, Green: 128, Blue: 255 } },
+];
+
 // Fetch all color data for coordinates 0-15
 fastify.get<ColorRequest & { Reply: ApiResponse }>('/api/colors', async (request, reply) => {
   const startTime = performance.now();
@@ -82,7 +115,26 @@ fastify.get<ColorRequest & { Reply: ApiResponse }>('/api/colors', async (request
     const results = await Promise.all(fetchPromises);
     
     // Filter out null values (failed requests)
-    const colorData = results.filter((item): item is ColorData => item !== null);
+    let colorData = results.filter((item): item is ColorData => item !== null);
+
+    // For locally mode, apply cached modifications
+    if (mode === 'locally') {
+      colorData = colorData.map((color) => {
+        const cacheKey = `${color.x},${color.y}`;
+        const cachedData = localPixelCache.get(cacheKey);
+        if (cachedData) {
+          return {
+            x: color.x,
+            y: color.y,
+            Red: cachedData.Red,
+            Green: cachedData.Green,
+            Blue: cachedData.Blue,
+            teamId: cachedData.teamId,
+          };
+        }
+        return color;
+      });
+    }
 
     const endTime = performance.now();
     const responseTime = endTime - startTime;
@@ -99,6 +151,51 @@ fastify.get<ColorRequest & { Reply: ApiResponse }>('/api/colors', async (request
     console.error('Error fetching colors:', error);
     throw error;
   }
+});
+
+// Endpoint to get all teams
+fastify.get('/api/teams', async (request, reply) => {
+  return { teams: TEAMS };
+});
+
+// Endpoint to update a pixel (locally mode only)
+fastify.post<{
+  Body: {
+    x: number;
+    y: number;
+    teamId: number;
+  };
+}>('/api/pixel', async (request, reply) => {
+  const { x, y, teamId } = request.body;
+
+  // Validate coordinates and teamId
+  if (x < 0 || x > 15 || y < 0 || y > 15 || teamId < 0 || teamId > 15) {
+    return reply.status(400).send({ error: 'Invalid coordinates or teamId' });
+  }
+
+  // Validate teamId is within range
+  const team = TEAMS.find((t) => t.id === teamId);
+  if (!team) {
+    return reply.status(400).send({ error: 'Invalid teamId' });
+  }
+
+  const cacheKey = `${x},${y}`;
+  localPixelCache.set(cacheKey, {
+    teamId,
+    Red: team.color.Red,
+    Green: team.color.Green,
+    Blue: team.color.Blue,
+  });
+
+  console.log(`Updated pixel [${x},${y}] to team ${teamId}`);
+
+  return {
+    success: true,
+    x,
+    y,
+    teamId,
+    color: team.color,
+  };
 });
 
 // Health check endpoint

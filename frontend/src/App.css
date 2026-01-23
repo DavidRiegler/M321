@@ -20,8 +20,9 @@ body {
 
 h1 {
   text-align: center;
-  color: #333;
+  color: #fff;
   margin-bottom: 30px;
+  font-size: 28px;
 }
 
 h2, h3 {
@@ -35,6 +36,8 @@ h2, h3 {
   gap: 20px;
   align-items: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .mode-selector {
@@ -89,6 +92,62 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Pixel Input Form */
+.pixel-input-form {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #444;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #1a1a1a;
+  color: #fff;
+  min-width: 120px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.submit-btn {
+  margin-top: 0;
+  background-color: #28a745;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
 .response-time {
   color: #fff;
   margin-bottom: 20px;
@@ -100,6 +159,7 @@ button:disabled {
   grid-template-columns: repeat(16, 1fr);
   gap: 0;
   border: 2px solid #333;
+  margin-bottom: 40px;
 }
 
 .color-cell {
@@ -107,13 +167,19 @@ button:disabled {
   background-color: rgb(var(--red), var(--green), var(--blue));
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
   min-width: 40px;
 }
 
-.color-cell:hover {
-  transform: scale(1.1);
+.color-cell.editable:hover {
+  transform: scale(1.05);
   z-index: 10;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.color-cell.read-only {
+  cursor: not-allowed;
+  opacity: 0.9;
 }
 
 .data-list {
@@ -150,3 +216,4 @@ table tbody tr:hover {
 table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+

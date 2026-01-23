@@ -28,3 +28,8 @@ build/
 
 # PDFs
 *.pdf
+
+# Folders
+Arbeitsblatter/
+edu-pixelboard/
+Milestones/
